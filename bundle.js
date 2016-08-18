@@ -45,25 +45,123 @@
 /***/ function(module, exports) {
 
 	
+	let up = false;
+	let down = false;
+	let right = false;
+	let left = false;
+	let x = 25;
+	let y = 25;
 
 	function draw() {
 
+	  document.addEventListener("keydown", keyDownHandler, false);
 
 	  drawGrid([
-	    [1, 1, 1, 1],
+	    [1, 0, 1, 1],
 	    [0, 2, 2, 4],
-	    [0, 4, 3, 3],
+	    [0, 4, 2, 2],
 	    [3, 4, 4, 3]
 	  ]);
+
+	  drawPlayer();
+
 	}
 
+	function keyDownHandler(e) {
+	  switch (e.keyCode) {
+	    case 87:
+	      y -= 50;
+	      break;
+
+	    case 65:
+	      x -= 50;
+	      break;
+
+	    case 83:
+	      y += 50;
+	      break;
+
+	    case 68:
+	      x += 50;
+	      break;
+	  }
+	}
+
+	function drawPlayer() {
+	  let playerCanvas = document.getElementById("player");
+	  let ctx = playerCanvas.getContext("2d");
 
 
+	  ctx.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
+	  ctx.beginPath();
+
+	  ctx.arc(x, y, 15, 0, 2 * Math.PI, false);
+	  ctx.fillStyle = 'purple';
+	  ctx.fill();
+	  ctx.lineWidth = 3;
+	  ctx.strokeStyle = '#003300';
+	  ctx.stroke();
+	  ctx.closePath();
+
+	  setTimeout(drawPlayer, 10);
+	}
+
+	// function playerMovement(x, y) {
+	//   let up = false;
+	//   let down = false;
+	//   let right = false;
+	//   let left = false;
+	//
+	//   document.addEventListener("keydown", keyDownHandler, false);
+	//   document.addEventListener("keyup", keyUpHandler, false);
+	//
+	//
+	//
+	  // function keyDownHandler(e) {
+	  //   switch (e.keycode) {
+	  //     case 87:
+	  //       up = true;
+	  //       break;
+	  //
+	  //     case 65:
+	  //       left = true;
+	  //       break;
+	  //
+	  //     case 83:
+	  //       down = true;
+	  //       break;
+	  //
+	  //     case 68:
+	  //       right = true;
+	  //       break;
+	  //   }
+	  // }
+	//
+	//   function keyUpHandler(e) {
+	//     switch (e.keycode) {
+	//       case 87:
+	//         up = false;
+	//         break;
+	//
+	//       case 65:
+	//         left = false;
+	//         break;
+	//
+	//       case 83:
+	//         down = false;
+	//         break;
+	//
+	//       case 68:
+	//         right = false;
+	//         break;
+	//     }
+	//   }
+	// }
 
 	function drawSquare(options) {
 	  let canvas = document.getElementById("board");
 	  let ctx = canvas.getContext("2d");
-
+	  ctx.beginPath();
 	  ctx.fillStyle = options.color;
 	  ctx.strokeStyle = "black";
 	  ctx.lineWidth = "2";
@@ -79,6 +177,7 @@
 	    options.size,
 	    options.size
 	  );
+	  ctx.closePath();
 
 	}
 
