@@ -46,44 +46,27 @@
 
 	
 	const Player = __webpack_require__(1);
-	const animate = __webpack_require__(2);
 	const requestAnimationFrame = __webpack_require__(3);
-	const drawSquare = __webpack_require__(4);
-	const drawPlayerIcon = __webpack_require__(6);
-	const gameBoard = __webpack_require__(7);
-	const shuffle = __webpack_require__(8);
 	const maze = __webpack_require__(9);
-	const judgeMovement = __webpack_require__(10);
-	const movementGrid = __webpack_require__(11);
 	const keyShortcuts = __webpack_require__(12);
+	const Board = __webpack_require__(13);
 
 	let player = new Player(25, 75, maze);
-	const COLORS =["red", "green", "blue", "yellow", "orange"];
+	let board = new Board(50, player.movementGrid);
 
 
 	function draw() {
-	  player.canJumpRight = true;
 	  keyShortcuts(player);
-	  drawGrid(maze);
 	  drawPlayer();
 	}
 
 
 	function drawPlayer() {
-
-	  drawPlayerIcon(player);
-
+	  player.drawPlayerIcon();
+	  board.drawGrid(player.movementGrid);
 	  requestAnimationFrame(drawPlayer);
 	}
 
-
-	function drawGrid(array) {
-	  let gridSize = 50;
-	  colors = shuffle(COLORS);
-
-	  gameBoard(array, drawSquare, colors, gridSize);
-
-	}
 
 
 	document.addEventListener("DOMContentLoaded", function() {
@@ -98,32 +81,76 @@
 	const judgeMovement = __webpack_require__(10);
 	const movementGrid = __webpack_require__(11);
 	const animate = __webpack_require__(2);
+	const drawPlayerIcon = __webpack_require__(6);
 
 	const Player = function (x, y, maze) {
 	  this.x = x;
 	  this.y = y;
+	  this.currentGridPos = [(this.y - 75) / 50, (this.x - 25) / 50];
 	  this.movementGrid = movementGrid(maze);
-	  this.canMoveUp= true;
-	  this.canMoveDown = true;
-	  this.canMoveLeft = true;
-	  this.canMoveRight = true;
-	  this.trueMovesArray = [];
 	  this.movesArray =
 	    [
 	      "canMoveUp",
 	      "canMoveDown",
 	      "canMoveLeft",
-	      "canMoveRight"
+	      "canMoveRight",
+	      "canJumpUp",
+	      "canJumpDown",
+	      "canJumpLeft",
+	      "canJumpRight"
 	    ];
+	  this.movesArray.forEach( (move) => {
+	    this[move] = true;
+	  });
+	  this.canMoveUp= false;
+	  this.canMoveLeft = false;
+	  this.canJumpUp = false;
+	  this.canJumpLeft = false;
+	};
+
+	Player.prototype.nullPos = function () {
+	  let pos = this.currentGridPos;
+	  this.movementGrid[pos[0]][pos[1]] = null;
+	};
+
+
+	Player.prototype.reset = function(maze) {
+	  this.x = 25;
+	  this.y = 75;
+	  this.movementGrid = movementGrid(maze);
+	  this.canMoveUp= false;
+	  this.canMoveLeft = false;
+	  this.canJumpUp = false;
+	  this.canJumpLeft = false;
+
+	  this.movesArray.forEach( (move) => {
+	    this[move] = true;
+	  });
+	};
+
+	Player.prototype.fail = function() {
+	  if (judgeMovement(this, this.movementGrid).length) {
+	    return false;
+	  } else {
+	    return true;
+	  }
+	};
+
+	Player.prototype.drawPlayerIcon = function () {
+	  drawPlayerIcon(this);
 	};
 
 	Player.prototype.animate = function (prop, distance, duration, jump = false) {
 	  animate.translate(this, prop, distance, duration, jump);
 	};
 
+	Player.prototype.judgeMovement = function () {
+	  return judgeMovement(this, this.movementGrid);
+	};
+
 	Player.prototype.validateMoves = function () {
 	  this.allFalse();
-	  let validMoves = judgeMovement(this, this.movementGrid);
+	  let validMoves = this.judgeMovement();
 	  validMoves.forEach( (validMove) => {
 	    this[validMove] = true;
 	  });
@@ -144,27 +171,32 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	const requestAnimationFrame = __webpack_require__(3);
+	const maze = __webpack_require__(9);
 	const animate = {
 	  translate (player, prop, distance, duration, jump= false) {
 	    player.allFalse();
 	    let start = new Date().getTime();
 	    let end = start + duration;
+	    let otherProp = prop === 'x' ? 'y' : 'x';
 	    let current = player[prop];
-	    let currentY = player.y;
+	    let otherCurrent = player[otherProp];
 
 	    let step = function () {
 	      let timestamp = new Date().getTime();
 	      let progress = Math.min((duration - (end - timestamp)) / duration, 1);
 	      player[prop] = current + (distance * progress);
 
-	      if (prop === "x" && jump) {
-	        player.y = currentY + (-1 * distance/2 ) * Math.sin(progress *  Math.PI);
+	      if (jump) {
+	        player[otherProp] = otherCurrent + (-1 * distance/2 ) * Math.sin(progress *  Math.PI);
 	      }
 
 	      if (progress < 1) {
 	        requestAnimationFrame(step);
 	      } else {
 	        player.validateMoves();
+	        if (player.judgeMovement().length === 0) {
+	          setTimeout(function(){player.reset(maze);}, 200);
+	        }
 	      }
 	    };
 
@@ -198,18 +230,19 @@
 	function drawSquare(options) {
 	  let canvas = document.getElementById("board");
 	  let ctx = canvas.getContext("2d");
+	  ctx.clearRect(0, 0, ctx.width, ctx.height);
 	  ctx.beginPath();
 	  ctx.fillStyle = options.color;
 	  ctx.strokeStyle = "black";
 	  ctx.lineWidth = "2";
 	  ctx.fillRect(
-	    (options.pos[0] + 1) * options.size,
+	    (options.pos[0] ) * options.size,
 	    (options.pos[1] + 1) * options.size,
 	    options.size,
 	    options.size
 	  );
 	  ctx.strokeRect(
-	    (options.pos[0] + 1) * options.size,
+	    (options.pos[0] ) * options.size,
 	    (options.pos[1] + 1) * options.size,
 	    options.size,
 	    options.size
@@ -255,11 +288,13 @@
 
 	  for (var row = 0; row < array.length; row++) {
 	    for (var col = 0; col < array[row].length; col++) {
-	      drawSquare({
-	        color: colors[array[row][col]],
-	        size: size,
-	        pos: [col, row]
-	      });
+	      let options = { color: colors[array[row][col]],
+	                      size: size,
+	                      pos: [col, row]
+	                    };
+
+	      if (array[row][col] === null) { options.color = "lightgray"; }
+	      if (array[row][col] >= 0) { drawSquare(options); }
 	    }
 	  }
 
@@ -290,12 +325,44 @@
 /* 9 */
 /***/ function(module, exports) {
 
-	module.exports = [
-	  [1, 0, 1, 1],
-	  [2, 2, 2, 4],
-	  [0, 4, 2, 2],
-	  [3, 4, 4, 3]
-	];
+	function maze () {
+	  let mazes = [];
+	  mazes.push([
+	    [3, 0, 3, 1],
+	    [2, 2, 2, 4],
+	    [0, 4, 2, 1],
+	    [3, 2, 1, 3]
+	  ]);
+
+	  mazes.push([
+	    [1, 0, 1, 1],
+	    [2, 2, 2, 4],
+	    [0, 4, 2, 2],
+	    [3, 4, 4, 3]
+	  ]);
+
+	  mazes.push([
+	    [1, 0, 1, 1],
+	    [2, 2, 2, 1],
+	    [0, 1, 2, 0],
+	    [2, 4, 2, 3]
+	  ]);
+
+	  mazes.push([
+	    [1, 0, 1, 1],
+	    [2, 2, 2, 1],
+	    [0, 4, 2, 2],
+	    [3, 4, 4, 3]
+	  ]);
+
+	  return mazes[Math.floor(Math.random() * (mazes.length))];
+
+	}
+
+
+
+
+	module.exports = maze();
 
 
 /***/ },
@@ -312,6 +379,10 @@
 	      [1, 0],
 	      [0, -1],
 	      [-1, 0],
+	      [0, 2],
+	      [2, 0],
+	      [0, -2],
+	      [-2, 0]
 	    ];
 
 	    let possMoves = [];
@@ -347,8 +418,7 @@
 	    let returnArr = [];
 	    validMovesArray.forEach( (move) => {
 	      let diff = [move[0] - currentPos[0], move[1] - currentPos[1]];
-	      // Use toString to compare arrays with having references
-	      // messing with conditionals
+	      // Use toString to compare arrays
 	      switch (diff.toString()) {
 	        case [0, -1].toString():
 	          returnArr.push("canMoveUp");
@@ -361,6 +431,18 @@
 	          break;
 	        case [-1, 0].toString():
 	          returnArr.push("canMoveLeft");
+	          break;
+	        case [0, -2].toString():
+	          returnArr.push("canJumpUp");
+	          break;
+	        case [0, 2].toString():
+	          returnArr.push("canJumpDown");
+	          break;
+	        case [2, 0].toString():
+	          returnArr.push("canJumpRight");
+	          break;
+	        case [-2, 0].toString():
+	          returnArr.push("canJumpLeft");
 	          break;
 	      }
 	    });
@@ -413,13 +495,37 @@
 	  key('shift+a', function() {
 	    if (player.canJumpLeft){player.animate('x', -100, 150, true);}
 	  });
-	  key('shift+w', function () {
+	  key('shift+s', function () {
 	    if (player.canJumpDown) {player.animate('y', 100, 150, true);}
 	  });
 	  key('shift+d', function () {
 	    if (player.canJumpRight) {player.animate('x', 100, 150, true);}
 	  });
 	};
+
+
+/***/ },
+/* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	const gameBoard = __webpack_require__(7);
+	const drawSquare = __webpack_require__(4);
+	const shuffle = __webpack_require__(8);
+
+	const Board = function (squareSize, grid) {
+	  this.grid = grid;
+	  this.squareSize = squareSize;
+	  this.colors = shuffle(["red", "green", "blue", "yellow", "orange"]);
+
+	};
+
+	Board.prototype.drawGrid = function (grid) {
+	  this.grid = grid;
+	  gameBoard(this.grid, drawSquare, this.colors, this.squareSize);
+	};
+
+
+	module.exports = Board;
 
 
 /***/ }
