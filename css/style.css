@@ -1,6 +1,17 @@
+body, html{
+  display: block;
+  height: 100%;
+}
+
+
 canvas {
   display: block;
-  height: 300px;
-  width: 300px;
+  height: 600px;
+  width: 600px;
   position: absolute;
+  vertical-align: middle;
+}
+
+#board2, #player2 {
+  left: 600px;
 }

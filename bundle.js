@@ -49,21 +49,28 @@
 	const requestAnimationFrame = __webpack_require__(3);
 	const maze = __webpack_require__(9);
 	const keyShortcuts = __webpack_require__(12);
+	const keyShortcuts2 = __webpack_require__(14);
 	const Board = __webpack_require__(13);
 
 	let player = new Player(25, 75, maze);
+	let player2 = new Player(25, 75, maze, true);
 	let board = new Board(50, player.movementGrid);
+	let board2 = new Board(50, player2.movementGrid, true);
 
 
 	function draw() {
 	  keyShortcuts(player);
+	  keyShortcuts2(player2);
 	  drawPlayer();
 	}
 
 
 	function drawPlayer() {
 	  player.drawPlayerIcon();
+	  player2.drawPlayerIcon();
 	  board.drawGrid(player.movementGrid);
+	  board2.drawGrid(player2.movementGrid);
+
 	  requestAnimationFrame(drawPlayer);
 	}
 
@@ -83,11 +90,11 @@
 	const animate = __webpack_require__(2);
 	const drawPlayerIcon = __webpack_require__(6);
 
-	const Player = function (x, y, maze) {
+	const Player = function (x, y, maze, player2 = false) {
 	  this.x = x;
 	  this.y = y;
-	  this.currentGridPos = [(this.y - 75) / 50, (this.x - 25) / 50];
 	  this.movementGrid = movementGrid(maze);
+	  this.player2 = player2;
 	  this.movesArray =
 	    [
 	      "canMoveUp",
@@ -108,9 +115,30 @@
 	  this.canJumpLeft = false;
 	};
 
+	Player.prototype.currentGridPos = function () {
+	  return [(this.y - 75) / 50, (this.x - 25) / 50];
+	};
+
+	Player.prototype.currentPosVal = function () {
+	  let pos = this.currentGridPos();
+	  return this.movementGrid[pos[0]][pos[1]];
+	};
+
 	Player.prototype.nullPos = function () {
-	  let pos = this.currentGridPos;
-	  this.movementGrid[pos[0]][pos[1]] = null;
+	  let pos = this.currentGridPos();
+	  if (this.currentPosVal() >= 0) {
+	    this.movementGrid[pos[0]][pos[1]] = null;
+	  }
+	};
+
+	Player.prototype.includes = function (val) {
+	  let grid = this.movementGrid;
+
+	  for (let i = 0; i < grid.length; i++) {
+	    if (grid[i].includes(val)) {return true;}
+	  }
+
+	  return false;
 	};
 
 
@@ -137,7 +165,7 @@
 	};
 
 	Player.prototype.drawPlayerIcon = function () {
-	  drawPlayerIcon(this);
+	  drawPlayerIcon(this, this.player2);
 	};
 
 	Player.prototype.animate = function (prop, distance, duration, jump = false) {
@@ -174,7 +202,9 @@
 	const maze = __webpack_require__(9);
 	const animate = {
 	  translate (player, prop, distance, duration, jump= false) {
+	    let prevPosVal = player.currentPosVal();
 	    player.allFalse();
+	    player.nullPos();
 	    let start = new Date().getTime();
 	    let end = start + duration;
 	    let otherProp = prop === 'x' ? 'y' : 'x';
@@ -193,6 +223,13 @@
 	      if (progress < 1) {
 	        requestAnimationFrame(step);
 	      } else {
+	        if (player.currentPosVal() === -2) {
+	          if (player.includes(prevPosVal)) {
+	            setTimeout(function(){player.reset(maze);}, 200);
+	          } else {
+	            alert("YOU WIN!");
+	          }
+	        }
 	        player.validateMoves();
 	        if (player.judgeMovement().length === 0) {
 	          setTimeout(function(){player.reset(maze);}, 200);
@@ -228,7 +265,8 @@
 /***/ function(module, exports) {
 
 	function drawSquare(options) {
-	  let canvas = document.getElementById("board");
+	  let boardId = (!options.player2) ? "board" : "board2";
+	  let canvas = document.getElementById(boardId);
 	  let ctx = canvas.getContext("2d");
 	  ctx.clearRect(0, 0, ctx.width, ctx.height);
 	  ctx.beginPath();
@@ -259,8 +297,9 @@
 /* 6 */
 /***/ function(module, exports) {
 
-	function playerIcon(player) {
-	  let playerCanvas = document.getElementById("player");
+	function playerIcon(player, player2) {
+	  let canvasId = (player2) ? "player2" : "player";
+	  let playerCanvas = document.getElementById(canvasId);
 	  let ctx = playerCanvas.getContext("2d");
 
 
@@ -284,13 +323,14 @@
 /* 7 */
 /***/ function(module, exports) {
 
-	function gameBoard(array, drawSquare, colors, size) {
+	function gameBoard(array, drawSquare, colors, size, player2) {
 
 	  for (var row = 0; row < array.length; row++) {
 	    for (var col = 0; col < array[row].length; col++) {
 	      let options = { color: colors[array[row][col]],
 	                      size: size,
-	                      pos: [col, row]
+	                      pos: [col, row],
+	                      player2: player2
 	                    };
 
 	      if (array[row][col] === null) { options.color = "lightgray"; }
@@ -328,10 +368,14 @@
 	function maze () {
 	  let mazes = [];
 	  mazes.push([
-	    [3, 0, 3, 1],
-	    [2, 2, 2, 4],
-	    [0, 4, 2, 1],
-	    [3, 2, 1, 3]
+	    [3, 0, 3, 1, 4, 0, 0, 1],
+	    [2, 2, 2, 4, 2, 3, 2, 1],
+	    [0, 4, 0, 1, 0, 3, 4, 4],
+	    [3, 1, 1, 3, 1, 1, 3, 3],
+	    [3, 1, 1, 3, 0, 1, 3, 3],
+	    [1, 1, 1, 3, 1, 1, 1, 3],
+	    [4, 3, 0, 3, 4, 1, 3, 3],
+	    [3, 4, 1, 3, 1, 1, 3, 4],
 	  ]);
 
 	  mazes.push([
@@ -477,28 +521,39 @@
 /***/ function(module, exports) {
 
 	module.exports = function (player) {
-	  key('w', function () {
+	  key('w', function (e) {
+	    e.preventDefault();
 	    if (player.canMoveUp) {player.animate('y', -50, 100);}
 	  });
-	  key('a', function () {
+	  key('a', function (e) {
+	    e.preventDefault();
 	    if (player.canMoveLeft){player.animate('x', -50, 100);}
 	  });
-	  key('s', function () {
+	  key('s', function (e) {
+	    e.preventDefault();
 	    if (player.canMoveDown) {player.animate('y', 50, 100);}
 	  });
-	  key('d', function () {
+	  key('d', function (e) {
+	    e.preventDefault();
 	    if (player.canMoveRight) {player.animate('x', 50, 100);}
 	  });
-	  key('shift+w', function () {
+	  key('shift', function (e) {
+	    e.preventDefault();
+	  });
+	  key('shift+w', function (e) {
+	    e.preventDefault();
 	    if (player.canJumpUp) {player.animate('y', -100, 150, true);}
 	  });
-	  key('shift+a', function() {
+	  key('shift+a', function(e) {
+	    e.preventDefault();
 	    if (player.canJumpLeft){player.animate('x', -100, 150, true);}
 	  });
-	  key('shift+s', function () {
+	  key('shift+s', function (e) {
+	    e.preventDefault();
 	    if (player.canJumpDown) {player.animate('y', 100, 150, true);}
 	  });
-	  key('shift+d', function () {
+	  key('shift+d', function (e) {
+	    e.preventDefault();
 	    if (player.canJumpRight) {player.animate('x', 100, 150, true);}
 	  });
 	};
@@ -512,20 +567,69 @@
 	const drawSquare = __webpack_require__(4);
 	const shuffle = __webpack_require__(8);
 
-	const Board = function (squareSize, grid) {
+	const Board = function (squareSize, grid, player2 = false) {
 	  this.grid = grid;
 	  this.squareSize = squareSize;
 	  this.colors = shuffle(["red", "green", "blue", "yellow", "orange"]);
-
+	  this.player2 = player2;
 	};
 
 	Board.prototype.drawGrid = function (grid) {
 	  this.grid = grid;
-	  gameBoard(this.grid, drawSquare, this.colors, this.squareSize);
+	  gameBoard(this.grid, drawSquare, this.colors, this.squareSize, this.player2);
 	};
 
 
 	module.exports = Board;
+
+
+/***/ },
+/* 14 */
+/***/ function(module, exports) {
+
+	module.exports = function (player) {
+	  key('i', function (e) {
+	    e.preventDefault();
+	    if (player.canMoveUp) {player.animate('y', -50, 100);}
+	  });
+	  key('j', function (e) {
+	    e.preventDefault();
+	    if (player.canMoveLeft){player.animate('x', -50, 100);}
+	  });
+	  key('k', function (e) {
+	    e.preventDefault();
+	    if (player.canMoveDown) {player.animate('y', 50, 100);}
+	  });
+	  key('l', function (e) {
+	    e.preventDefault();
+	    if (player.canMoveRight) {player.animate('x', 50, 100);}
+	  });
+
+	  key('⌘', function(e) {
+	    e.preventDefault();
+	  });
+	  key('⌘+i', function (e) {
+	    e.preventDefault();
+	    if (player.canJumpUp) {
+	      player.animate('y', -100, 150, true);
+	    }
+	  });
+	  key('⌘+j', function(e) {
+	    e.preventDefault();
+	    if (player.canJumpLeft){
+	      player.animate('x', -100, 150, true);}
+	  });
+	  key('⌘+k', function (e) {
+	    e.preventDefault();
+	    if (player.canJumpDown) {
+	      player.animate('y', 100, 150, true);}
+	  });
+	  key('⌘+l', function (e) {
+	    e.preventDefault();
+	    if (player.canJumpRight) {
+	      player.animate('x', 100, 150, true);}
+	  });
+	};
 
 
 /***/ }
