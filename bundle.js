@@ -131,6 +131,7 @@
 	  // power up modifiers
 	  this.reverseDirections = false;
 	  this.speed = 150;
+	  this.vanish = false;
 	};
 
 	Player.prototype.keyboardInput = function () {
@@ -475,15 +476,17 @@
 
 
 	  ctx.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
-	  ctx.beginPath();
+	  if (!player.vanish) {
+	    ctx.beginPath();
 
-	  ctx.arc(player.x, player.y, 15, 0, 2 * Math.PI, false);
-	  ctx.fillStyle = player2 ? 'lightblue' : 'purple';
-	  ctx.fill();
-	  ctx.lineWidth = 3;
-	  ctx.strokeStyle = '#003300';
-	  ctx.stroke();
-	  ctx.closePath();
+	    ctx.arc(player.x, player.y, 15, 0, 2 * Math.PI, false);
+	    ctx.fillStyle = player2 ? 'lightblue' : 'purple';
+	    ctx.fill();
+	    ctx.lineWidth = 3;
+	    ctx.strokeStyle = '#003300';
+	    ctx.stroke();
+	    ctx.closePath();
+	  }
 
 	}
 
@@ -893,7 +896,7 @@
 	const shuffle = __webpack_require__(15);
 
 	const PowerUp = function (player, board) {
-	  let powerUps = ["slow"];
+	  let powerUps = ["vanish"];
 	  // ["freeze", "rotate", "blind", "reverse", "vanish", "slow", "fast"];
 	  this.type = shuffle(powerUps)[0];
 	  this.forPlayer = player;
@@ -966,14 +969,6 @@
 	  }, 5000);
 	};
 
-	PowerUp.prototype.rotate = function() {
-	  // Keeps rotating the board 360 degrees
-	};
-
-	PowerUp.prototype.blind = function() {
-	  // rolls down window blinds on the opponents board
-	};
-
 	PowerUp.prototype.reverse = function() {
 	  // reverse the opponents directions
 	  this.forPlayer.opponent.reverseDirections = true;
@@ -986,6 +981,12 @@
 	PowerUp.prototype.vanish = function() {
 	  // Opponents icon disappears
 
+	  this.forPlayer.opponent.vanish = true;
+
+	  setTimeout(() => {
+	    this.forPlayer.opponent.vanish = false;
+	  }, 5000);
+
 	};
 
 	PowerUp.prototype.slow = function () {
@@ -993,6 +994,14 @@
 	  setTimeout(() => {
 	    this.forPlayer.opponent.speed = 150;
 	  }, 5000);
+	};
+
+	PowerUp.prototype.rotate = function() {
+	  // Keeps rotating the board 360 degrees
+	};
+
+	PowerUp.prototype.blind = function() {
+	  // rolls down window blinds on the opponents board
 	};
 
 
