@@ -8,10 +8,26 @@
     <script type="text/javascript" src="./bundle.js"></script>
   </head>
   <body>
-    <canvas id="board" width="600" height="600"></canvas>
-    <canvas id="player" width="600" height="600"></canvas>
-    <canvas id="board2" width="600" height="600"></canvas>
-    <canvas id="player2" width="600" height="600"></canvas>
+    <div class="player1">
+      <div class="game1">
+        <canvas id="board" width="600" height="600"></canvas>
+        <canvas id="player" width="600" height="600"></canvas>
+      </div>
+      <ul>
+        <li>Floor: <span id="floor1"></span></li>
+        <li>Power Down: <span id="power-up1"></span></li>
+      </ul>
+    </div>
+    <div class="player2">
+      <div class="game2">
+        <canvas id="board2" width="600" height="600"></canvas>
+        <canvas id="player2" width="600" height="600"></canvas>
+      </div>
+      <ul>
+        <li>Floor: <span id="floor2"></span></li>
+        <li>Power Up: <span id="power-up2"></span></li>
+      </ul>
+    </div>
 
     <script src="./vendor/keymaster.js"></script>
   </body>

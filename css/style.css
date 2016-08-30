@@ -3,15 +3,31 @@ body, html{
   height: 100%;
 }
 
+ul {
+  list-style: none;
+  display: block;
+}
+
+ul > li{
+  display: inline-block;
+  margin-right: 20px;
+}
+
+
+.player1, .player2 {
+  display: inline-block;
+  height: 600px;
+  width: 600px;
+  vertical-align: middle;
+  margin: 0 auto;
+}
+
+.player2 {
+  left: 600px;
+}
 
 canvas {
   display: block;
-  height: 600px;
-  width: 600px;
   position: absolute;
-  vertical-align: middle;
-}
-
-#board2, #player2 {
-  left: 600px;
+  margin: 0 auto;
 }
