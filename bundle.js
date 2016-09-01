@@ -51,6 +51,7 @@
 	const PowerUp = __webpack_require__(16);
 	const shuffle = __webpack_require__(7);
 	// const MazeCreator = require("./maze_creator.js");
+	//
 
 	let player = new Player(25, 75, mazes[0]);
 	let board = new Board(50, player.movementGrid);
@@ -83,8 +84,22 @@
 
 	  requestAnimationFrame(drawPlayer);
 	}
+	function modal () {
+	  let modal = document.getElementById("myModal");
+	  let btn = document.getElementById("btn");
+	  btn.addEventListener("click", ()=> {
+	    modal.style.display = "block";
+	  });
 
-	document.addEventListener("DOMContentLoaded", function() {
+	  window.onclick = function (event) {
+	    if (event.target == modal) {
+	      modal.style.display = "none";
+	    }
+	  };
+	}
+
+	document.addEventListener("DOMContentLoaded", () => {
+	  modal();
 	  player.keyboardInput();
 	  player2.keyboardInput();
 	  powerUp1.setKeyboardInput();
@@ -473,16 +488,17 @@
 	  let easiestMaze;
 	  let easyMazes = [];
 	  let hardMazes = [];
-	  // mazes.push([
-	  //   [3, 0, 3, 2, 4, 0, 0, 3],
-	  //   [3, 0, 2, 4, 2, 3, 4, 3],
-	  //   [0, 4, 0, 3, 0, 3, 4, 4],
-	  //   [3, 1, 1, 3, 1, 1, 3, 3],
-	  //   [3, 1, 1, 3, 0, 1, 3, 3],
-	  //   [1, 1, 1, 3, 1, 1, 1, 3],
-	  //   [4, 3, 0, 3, 4, 1, 3, 3],
-	  //   [3, 4, 1, 3, 1, 1, 3, 4],
-	  // ]);
+
+	  hardMazes.push([
+	    [3, 0, 3, 2, 4, 0, 0, 3],
+	    [3, 0, 2, 4, 2, 3, 4, 3],
+	    [0, 4, 0, 3, 0, 3, 4, 4],
+	    [3, 1, 1, 3, 1, 1, 3, 3],
+	    [3, 1, 1, 3, 0, 1, 3, 3],
+	    [1, 1, 1, 3, 1, 1, 1, 3],
+	    [4, 3, 0, 3, 4, 1, 3, 3],
+	    [3, 4, 1, 3, 1, 1, 3, 4],
+	  ]);
 
 	  easyMazes.push([
 	    [0, 2, 2, 2, 2],
@@ -595,13 +611,12 @@
 	  let player1 = [];
 	  let player2 = [];
 
-	  player1.push(easiestMaze);
-	  player2.push(easiestMaze);
+	  player1.push(easiestMaze.slice());
+	  player2.push(easiestMaze.slice());
 	  easyMazes = easyMazes.slice(0,4);
 	  hardMazes = shuffle(hardMazes);
-
-	  player1 = player1.concat(shuffle(easyMazes));
-	  player2 = player2.concat(shuffle(easyMazes));
+	  player1 = player1.concat(shuffle(easyMazes.slice()));
+	  player2 = player2.concat(shuffle(easyMazes.slice()));
 
 	  player1.push(hardMazes[0]);
 	  player2.push(hardMazes[0]);
@@ -1053,7 +1068,7 @@
 	const shuffle = __webpack_require__(7);
 
 	const PowerUp = function (player, board) {
-	  let powerUps = ["flip"];
+	  let powerUps = ["freeze", "rotate", "reverse", "vanish", "slow", "flip"];
 	  // ["freeze", "rotate", "reverse", "vanish", "slow"];
 	  this.type = shuffle(powerUps)[0];
 	  this.forPlayer = player;

@@ -8,16 +8,32 @@
     <script type="text/javascript" src="./bundle.js"></script>
   </head>
   <body>
+    <div class="modal" id="myModal">
+      <div class="modal-content">
+        <p>
+          Instructions: <br> Maze Racer is a multiplayer game where two players compete to cross the maze.
+          The only rule is one color must be cleared to proceed.
+          There are 5 levels plus 1 boss level.
+          Players can disrupt their opponent with weapons collected by traveling thru yellow circles
+        </p>
+        <div class="instructions group">
+          <img id="instruct1" src="./images/instructions1.png" alt="instruct" />
+          <img id="instruct2" src="./images/instructions2.png" alt="instruct" />
+        </div>
+
+      </div>
+    </div>
 
     <div class="game-screen group">
       <h1>M A Z E   R A C E R</h1>
+      <p id="btn"> Instructions</p>
       <div class="player1">
-        <img src="./images/freeze.png" alt="FREEZE" id="freeze1" />
-        <img src="./images/reverse.png" alt="REVERSE" id="reverse1"/>
-        <img src="./images/rotate.png" alt="ROTATE" id="rotate1" />
-        <img src="./images/slow.png" alt="SLOW" id="slow1"/>
-        <img src="./images/vanish.png" alt="VANISH" id="vanish1"/>
-        <img src="./images/flip.png" alt="FLIP" id="flip1"/>
+        <img class="power" src="./images/freeze.png" alt="FREEZE" id="freeze1" />
+        <img class="power" src="./images/reverse.png" alt="REVERSE" id="reverse1"/>
+        <img class="power" src="./images/rotate.png" alt="ROTATE" id="rotate1" />
+        <img class="power" src="./images/slow.png" alt="SLOW" id="slow1"/>
+        <img class="power" src="./images/vanish.png" alt="VANISH" id="vanish1"/>
+        <img class="power" src="./images/flip.png" alt="FLIP" id="flip1"/>
 
         <div id="game1" class="game1">
           <canvas id="board" width="500" height="500"></canvas>
@@ -29,12 +45,12 @@
         </ul>
       </div>
       <div class="player2">
-        <img src="./images/freeze.png" alt="FREEZE" id="freeze2"/>
-        <img src="./images/reverse.png" alt="REVERSE" id="reverse2"/>
-        <img src="./images/rotate.png" alt="ROTATE" id="rotate2"/>
-        <img src="./images/slow.png" alt="SLOW" id="slow2"/>
-        <img src="./images/vanish.png" alt="VANISH" id="vanish2"/>
-        <img src="./images/flip.png" alt="FLIP" id="flip2"/>
+        <img class="power" src="./images/freeze.png" alt="FREEZE" id="freeze2"/>
+        <img class="power" src="./images/reverse.png" alt="REVERSE" id="reverse2"/>
+        <img class="power" src="./images/rotate.png" alt="ROTATE" id="rotate2"/>
+        <img class="power" src="./images/slow.png" alt="SLOW" id="slow2"/>
+        <img class="power" src="./images/vanish.png" alt="VANISH" id="vanish2"/>
+        <img class="power" src="./images/flip.png" alt="FLIP" id="flip2"/>
 
         <div id="game2" class="game2">
           <canvas id="board2" width="500" height="500"></canvas>
