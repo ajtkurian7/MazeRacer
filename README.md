@@ -1,4 +1,4 @@
-# Skyscraper
+# MazeRacer
 
 ## Minimum Viable Product
 
