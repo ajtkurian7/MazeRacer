@@ -292,6 +292,7 @@
 	  let id = this.player2 ? 'power-up2' : 'power-up1';
 	  let el = document.getElementById(id);
 	  if (el.innerHTML === "") { this.powerUp = null; }
+
 	};
 
 	Player.prototype.displayLevel = function () {
@@ -659,6 +660,9 @@
 	  let playerCanvas = document.getElementById(canvasId);
 	  let ctx = playerCanvas.getContext("2d");
 
+	  playerCanvas.width = (player.movementGrid.length + 2) * 50;
+	  playerCanvas.height = playerCanvas.width;
+
 
 	  ctx.clearRect(0, 0, playerCanvas.width, playerCanvas.height);
 	  if (!player.vanish) {
@@ -1004,23 +1008,25 @@
 /* 14 */
 /***/ function(module, exports) {
 
-	function gameBoard(player, drawSquare) {
-	  let boardId = (!player.player2) ? "board" : "board2";
+	function gameBoard(board, drawSquare) {
+	  let boardId = (!board.player2) ? "board" : "board2";
 	  let canvas = document.getElementById(boardId);
 	  let ctx = canvas.getContext("2d");
 
+	  canvas.width = (board.grid.length + 2) * 50;
+	  canvas.height = canvas.width;
 	  ctx.clearRect(0, 0, 600, 600);
 
-	  for (var row = 0; row < player.grid.length; row++) {
-	    for (var col = 0; col < player.grid[row].length; col++) {
-	      let options = { color: player.colors[player.grid[row][col]],
-	                      size: player.squareSize,
+	  for (var row = 0; row < board.grid.length; row++) {
+	    for (var col = 0; col < board.grid[row].length; col++) {
+	      let options = { color: board.colors[board.grid[row][col]],
+	                      size: board.squareSize,
 	                      pos: [col, row],
-	                      player2: player.player2
+	                      player2: board.player2
 	                    };
 
-	      if (player.grid[row][col] === null) { options.color = "lightgray"; }
-	      if (player.grid[row][col] >= 0) { drawSquare(options); }
+	      if (board.grid[row][col] === null) { options.color = "lightgray"; }
+	      if (board.grid[row][col] >= 0) { drawSquare(options); }
 	    }
 	  }
 
@@ -1068,9 +1074,8 @@
 	const shuffle = __webpack_require__(7);
 
 	const PowerUp = function (player, board) {
-	  let powerUps = ["freeze", "rotate", "reverse", "vanish", "slow", "flip"];
-	  // ["freeze", "rotate", "reverse", "vanish", "slow"];
-	  this.type = shuffle(powerUps)[0];
+	  this.powerUps = ["freeze", "rotate", "reverse", "vanish", "slow", "flip"];
+	  this.type = this.powerUps[Math.floor(Math.random() * this.powerUps.length)];
 	  this.forPlayer = player;
 	  this.board = board;
 	  this.grid = board.grid;
@@ -1083,12 +1088,17 @@
 
 	};
 
+	PowerUp.prototype.newType = function () {
+
+	  this.type = this.powerUps[Math.floor(Math.random() * this.powerUps.length)];
+	};
+
 	PowerUp.prototype.setKeyboardInput = function () {
 	  let letter = this.forPlayer.player2 ? "u" : "q";
 	  let htmlLabel = document.getElementById(this.Id);
 	  let that = this;
 	  key(letter, function() {
-	    if (htmlLabel.innerHTML) { that[that.type](); }
+	    if (htmlLabel.innerHTML) { that[that.forPlayer.powerUp](); }
 	  });
 	};
 
@@ -1123,9 +1133,10 @@
 	    let powerUpPos = [this.xCanvas(), this.yCanvas()];
 
 	    if (playerPos.toString() === powerUpPos.toString()) {
+	      this.newType();
 	      player.powerUp = this.type;
 	      let htmlLabel = document.getElementById(this.Id);
-	      htmlLabel.innerHTML = htmlLabel.innerHTML || this.type.toUpperCase();
+	      htmlLabel.innerHTML = htmlLabel.innerHTML || player.powerUp.toUpperCase();
 	    } else {
 	      this.drawIcon();
 	    }
