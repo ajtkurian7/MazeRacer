@@ -1,33 +1,111 @@
 body, html{
   display: block;
-  height: 100%;
+  font-family: helvetica;
+
+}
+
+img {
+  display: block;
+  position: absolute;
+  visibility: hidden;;
+  width: 320px;
+  height: 100px;
+}
+
+.player1 img, .player2 img{
+  top: 200px;
+  left: 100px;
+  z-index: 99;
+}
+
+
+
+h1 {
+  display: block;
+  text-align: center;
+
+}
+
+.game-screen {
+  display: block;
+  position: relative;
+  width: 1200px;
+  margin: 0 auto;
 }
 
 ul {
   list-style: none;
   display: block;
+  padding-left: 120px;
 }
 
 ul > li{
   display: inline-block;
-  margin-right: 20px;
+  margin-right: 70px;
 }
 
 
-.player1, .player2 {
-  display: inline-block;
-  height: 600px;
-  width: 600px;
+.player1, .player2, #game1, #game2 {
+  display: block;
+  height: 500px;
+  width: 500px;
   vertical-align: middle;
   margin: 0 auto;
 }
 
+.player1 {
+  /*position: relative;*/
+  position: relative;
+  float: left;
+}
+
 .player2 {
-  left: 600px;
+  /*position: relative;*/
+  float: right;
+  position: relative;
+}
+
+.group:after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+
+.player2 {
+  /*left: 500px;*/
 }
 
 canvas {
   display: block;
   position: absolute;
   margin: 0 auto;
+}
+
+.spin {
+  -webkit-animation:spin 1s linear infinite;
+  -moz-animation:spin 1s linear infinite;
+  animation:spin 1s linear infinite;
+}
+
+.spin2 {
+  -webkit-animation:spin2 1s linear infinite;
+  -moz-animation:spin2 1s linear infinite;
+  animation:spin2 1s linear infinite;
+}
+
+@-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
+@-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
+@keyframes spin {
+  100% { -webkit-transform: rotate(360deg);
+    transform:rotate(360deg);
+  }
+}
+
+@-moz-keyframes spin2 { 100% { -moz-transform: rotateY(360deg); } }
+@-webkit-keyframes spin2 { 100% { -webkit-transform: rotateY(360deg); } }
+@keyframes spin2 {
+  100% { -webkit-transform: rotateY(360deg);
+    transform:rotateY(360deg);
+  }
 }

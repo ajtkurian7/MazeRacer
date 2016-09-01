@@ -2,31 +2,49 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Skyscraper!!</title>
+    <title>Maze Racer</title>
     <link rel="stylesheet" href="./css/style.css" media="screen" charset="utf-8">
     <!-- <script type="text/javascript" src="./vendor/keymaster.js"></script> -->
     <script type="text/javascript" src="./bundle.js"></script>
   </head>
   <body>
-    <div class="player1">
-      <div class="game1">
-        <canvas id="board" width="600" height="600"></canvas>
-        <canvas id="player" width="600" height="600"></canvas>
+
+    <div class="game-screen group">
+      <h1>M A Z E   R A C E R</h1>
+      <div class="player1">
+        <img src="./images/freeze.png" alt="FREEZE" id="freeze1" />
+        <img src="./images/reverse.png" alt="REVERSE" id="reverse1"/>
+        <img src="./images/rotate.png" alt="ROTATE" id="rotate1" />
+        <img src="./images/slow.png" alt="SLOW" id="slow1"/>
+        <img src="./images/vanish.png" alt="VANISH" id="vanish1"/>
+        <img src="./images/flip.png" alt="FLIP" id="flip1"/>
+
+        <div id="game1" class="game1">
+          <canvas id="board" width="500" height="500"></canvas>
+          <canvas id="player" width="500" height="500"></canvas>
+        </div>
+        <ul>
+          <li>Level: <span id="level1"></span></li>
+          <li>Weapon: <span id="power-up1"></span></li>
+        </ul>
       </div>
-      <ul>
-        <li>Floor: <span id="floor1"></span></li>
-        <li>Power Down: <span id="power-up1"></span></li>
-      </ul>
-    </div>
-    <div class="player2">
-      <div class="game2">
-        <canvas id="board2" width="600" height="600"></canvas>
-        <canvas id="player2" width="600" height="600"></canvas>
+      <div class="player2">
+        <img src="./images/freeze.png" alt="FREEZE" id="freeze2"/>
+        <img src="./images/reverse.png" alt="REVERSE" id="reverse2"/>
+        <img src="./images/rotate.png" alt="ROTATE" id="rotate2"/>
+        <img src="./images/slow.png" alt="SLOW" id="slow2"/>
+        <img src="./images/vanish.png" alt="VANISH" id="vanish2"/>
+        <img src="./images/flip.png" alt="FLIP" id="flip2"/>
+
+        <div id="game2" class="game2">
+          <canvas id="board2" width="500" height="500"></canvas>
+          <canvas id="player2" width="500" height="500"></canvas>
+        </div>
+        <ul>
+          <li>Level: <span id="level2"></span></li>
+          <li>Weapon: <span id="power-up2"></span></li>
+        </ul>
       </div>
-      <ul>
-        <li>Floor: <span id="floor2"></span></li>
-        <li>Power Up: <span id="power-up2"></span></li>
-      </ul>
     </div>
 
     <script src="./vendor/keymaster.js"></script>

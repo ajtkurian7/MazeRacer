@@ -46,15 +46,17 @@
 
 	const Player = __webpack_require__(1);
 	const requestAnimationFrame = __webpack_require__(5);
-	const maze = __webpack_require__(6);
-	const Board = __webpack_require__(12);
+	const mazes = __webpack_require__(6);
+	const Board = __webpack_require__(13);
 	const PowerUp = __webpack_require__(16);
+	const shuffle = __webpack_require__(7);
+	// const MazeCreator = require("./maze_creator.js");
 
-	let player = new Player(25, 75, maze);
+	let player = new Player(25, 75, mazes[0]);
 	let board = new Board(50, player.movementGrid);
 	let powerUp1 = new PowerUp(player, board);
 
-	let player2 = new Player(25, 75, maze, true);
+	let player2 = new Player(25, 75, mazes[1], true);
 	let board2 = new Board(50, player2.movementGrid, true);
 	let powerUp2 = new PowerUp(player2, board2);
 	player.opponent = player2;
@@ -64,12 +66,17 @@
 	  player.drawPlayerIcon();
 	  player2.drawPlayerIcon();
 
-
-	  powerUp1.checkForPowerUp(player);
-	  powerUp2.checkForPowerUp(player2);
+	  let grid = board.grid;
 
 	  board.drawGrid(player.movementGrid);
 	  board2.drawGrid(player2.movementGrid);
+
+	  let grid2 = board.grid;
+
+	  powerUp1.checkForPowerUp(player, board);
+	  powerUp2.checkForPowerUp(player2, board2);
+
+
 
 	  player.keyboardInput();
 	  player2.keyboardInput();
@@ -93,20 +100,23 @@
 	const judgeMovement = __webpack_require__(2);
 	const movementGrid = __webpack_require__(3);
 	const animate = __webpack_require__(4);
-	const drawPlayerIcon = __webpack_require__(7);
-	const keyShortcuts = __webpack_require__(8);
-	const keyShortcuts2 = __webpack_require__(9);
-	const revKeyShortcuts = __webpack_require__(10);
-	const revKeyShortcuts2 = __webpack_require__(11);
+	const drawPlayerIcon = __webpack_require__(8);
+	const keyShortcuts = __webpack_require__(9);
+	const keyShortcuts2 = __webpack_require__(10);
+	const revKeyShortcuts = __webpack_require__(11);
+	const revKeyShortcuts2 = __webpack_require__(12);
 
 
-	const Player = function (x, y, maze, player2 = false) {
+	const Player = function (x, y, mazes, player2 = false) {
 	  this.canvasId = (player2) ? "player2" : "player";
 
 	  this.x = x;
 	  this.y = y;
-	  this.movementGrid = movementGrid(maze);
+	  this.maze = mazes.shift();
+	  this.movementGrid = movementGrid(this.maze);
+	  this.mazeArray = mazes;
 	  this.player2 = player2;
+	  this.level = 1;
 	  this.opponent = null;
 	  this.powerUp = null;
 	  this.movesArray =
@@ -192,18 +202,20 @@
 	};
 
 
-	Player.prototype.reset = function(maze) {
+	Player.prototype.reset = function() {
 	  this.x = 25;
 	  this.y = 75;
-	  this.movementGrid = movementGrid(maze);
-	  this.canMoveUp= false;
-	  this.canMoveLeft = false;
-	  this.canJumpUp = false;
-	  this.canJumpLeft = false;
+	  this.movementGrid = movementGrid(this.maze);
+
 
 	  this.movesArray.forEach( (move) => {
 	    this[move] = true;
 	  });
+
+	  this.canMoveUp= false;
+	  this.canMoveLeft = false;
+	  this.canJumpUp = false;
+	  this.canJumpLeft = false;
 	};
 
 	Player.prototype.fail = function() {
@@ -216,6 +228,7 @@
 
 	Player.prototype.drawPlayerIcon = function () {
 	  drawPlayerIcon(this, this.player2);
+	  this.displayLevel();
 	};
 
 	Player.prototype.animate = function (prop, distance, duration, jump = false) {
@@ -238,6 +251,43 @@
 	  this.movesArray.forEach( (moveDirection) => {
 	    this[moveDirection] = false;
 	  });
+	};
+
+	Player.prototype.checkWin = function (prevPosVal) {
+	  if (this.currentPosVal() === -2) {
+	    if (this.includes(prevPosVal)) {
+	      setTimeout(() => { this.reset(this.maze); }, 200);
+	    } else {
+	      if (this.mazeArray.length) {
+	        this.level += 1;
+	        setTimeout(() => {
+	          this.maze = this.mazeArray.shift().slice();
+	          this.reset();
+	          this.resetPowerUp();
+	        }, 200);
+	      } else {
+	        alert(this.player2 ? "Player 2 Wins" : "Player 1 Wins");
+	        document.location.reload(true);
+	      }
+	    }
+	  }
+	};
+
+	Player.prototype.resetPowerUp = function () {
+	  let id = this.player2 ? 'power-up2' : 'power-up1';
+	  let el = document.getElementById(id);
+	  if (el.innerHTML === "") { this.powerUp = null; }
+	};
+
+	Player.prototype.displayLevel = function () {
+	  let id = this.player2 ? "level2" : "level1";
+	  let el = document.getElementById(id);
+
+	  if (this.level === 6) {
+	    el.innerHTML = "Boss Level";
+	  } else {
+	    el.innerHTML = this.level;
+	  }
 	};
 
 
@@ -356,6 +406,7 @@
 
 	const requestAnimationFrame = __webpack_require__(5);
 	const maze = __webpack_require__(6);
+
 	const animate = {
 	  translate (player, prop, distance, duration, jump= false) {
 	    let prevPosVal = player.currentPosVal();
@@ -379,17 +430,12 @@
 	      if (progress < 1) {
 	        requestAnimationFrame(step);
 	      } else {
-	        if (player.currentPosVal() === -2) {
-	          if (player.includes(prevPosVal)) {
-	            setTimeout(function(){player.reset(maze);}, 200);
-	          } else {
-	            alert("YOU WIN!");
-	            document.location.reload(true);
-	          }
-	        }
+
+	        player.checkWin(prevPosVal);
+
 	        player.validateMoves();
 	        if (player.judgeMovement().length === 0) {
-	          setTimeout(function(){player.reset(maze);}, 200);
+	          setTimeout(function(){player.reset();}, 200);
 	        }
 	      }
 	    };
@@ -419,46 +465,152 @@
 
 /***/ },
 /* 6 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
+
+	const shuffle = __webpack_require__(7);
 
 	function maze () {
-	  let mazes = [];
-	  mazes.push([
-	    [3, 0, 3, 1, 4, 0, 0, 1],
+	  let easiestMaze;
+	  let easyMazes = [];
+	  let hardMazes = [];
+	  // mazes.push([
+	  //   [3, 0, 3, 2, 4, 0, 0, 3],
+	  //   [3, 0, 2, 4, 2, 3, 4, 3],
+	  //   [0, 4, 0, 3, 0, 3, 4, 4],
+	  //   [3, 1, 1, 3, 1, 1, 3, 3],
+	  //   [3, 1, 1, 3, 0, 1, 3, 3],
+	  //   [1, 1, 1, 3, 1, 1, 1, 3],
+	  //   [4, 3, 0, 3, 4, 1, 3, 3],
+	  //   [3, 4, 1, 3, 1, 1, 3, 4],
+	  // ]);
+
+	  easyMazes.push([
+	    [0, 2, 2, 2, 2],
+	    [4, 2, 1, 0, 1],
+	    [0, 0, 0, 0, 0],
+	    [1, 0, 1, 0, 4],
+	    [0, 3, 3, 3, 0],
+	  ]);
+
+	  easyMazes.push([
+	    [1, 0, 2, 0, 3],
+	    [1, 4, 0, 3, 0],
+	    [1, 1, 1, 1, 1],
+	    [2, 3, 2, 0, 1],
+	    [0, 2, 3, 4, 1],
+	  ]);
+	  easyMazes.push([
+	    [0, 3, 1, 3, 0],
+	    [1, 0, 1, 0, 1],
+	    [1, 1, 4, 4, 0],
+	    [0, 2, 2, 2, 1],
+	    [0, 1, 0, 3, 0],
+	  ]);
+	  easyMazes.push([
+	    [1, 2, 0, 2, 1],
+	    [0, 0, 3, 0, 0],
+	    [1, 2, 1, 2, 1],
+	    [0, 0, 3, 0, 0],
+	    [1, 0, 1, 0, 1],
+	  ]);
+	  easiestMaze = [
+	    [0, 0, 0, 0, 0],
+	    [0, 0, 0, 0, 0],
+	    [1, 1, 1, 1, 1],
+	    [0, 0, 0, 0, 0],
+	    [0, 0, 0, 0, 0],
+	  ];
+
+	  easyMazes.push([
+	    [1, 0, 1, 0, 3],
+	    [0, 2, 0, 2, 0],
+	    [4, 2, 1, 2, 4],
+	    [0, 2, 0, 2, 0],
+	    [3, 0, 1, 0, 1],
+	  ]);
+
+	  easyMazes.push([
+	    [4, 0, 4, 0, 0],
+	    [1, 1, 1, 1, 1],
+	    [0, 3, 3, 0, 0],
+	    [0, 0, 2, 2, 2],
+	    [0, 2, 2, 2, 1],
+	  ]);
+
+	  easyMazes.push([
+	    [1, 0, 0, 2, 1],
+	    [0, 2, 4, 2, 4],
+	    [1, 2, 2, 2, 1],
+	    [0, 0, 4, 2, 0],
+	    [1, 4, 4, 0, 1],
+	  ]);
+
+
+
+
+	  hardMazes.push([
+	    [3, 0, 3, 3, 4, 0, 0, 1],
 	    [2, 2, 2, 4, 2, 3, 2, 1],
 	    [0, 4, 0, 1, 0, 3, 4, 4],
-	    [3, 1, 1, 3, 1, 1, 3, 3],
+	    [3, 1, 2, 3, 2, 2, 3, 3],
 	    [3, 1, 1, 3, 0, 1, 3, 3],
-	    [1, 1, 1, 3, 1, 1, 1, 3],
+	    [1, 1, 2, 2, 1, 2, 1, 3],
 	    [4, 3, 0, 3, 4, 1, 3, 3],
 	    [3, 4, 1, 3, 1, 1, 3, 4],
 	  ]);
 
-	  mazes.push([
-	    [1, 0, 1, 1],
-	    [2, 2, 2, 4],
-	    [0, 4, 2, 2],
-	    [3, 4, 4, 3]
+	  hardMazes.push([
+	    [3, 0, 3, 0, 3, 3, 0, 0],
+	    [0, 4, 0, 4, 0, 0, 4, 0],
+	    [0, 0, 0, 4, 0, 0, 0, 0],
+	    [1, 0, 1, 4, 0, 3, 0, 0],
+	    [1, 0, 1, 0, 3, 0, 0, 0],
+	    [1, 0, 1, 0, 0, 0, 0, 0],
+	    [0, 0, 1, 1, 1, 0, 1, 0],
+	    [0, 2, 2, 0, 2, 0, 2, 0]
 	  ]);
 
-	  mazes.push([
-	    [1, 0, 1, 1],
-	    [2, 2, 2, 1],
-	    [0, 1, 2, 0],
-	    [2, 4, 2, 3]
+	  hardMazes.push([
+	    [0, 1, 1, 0, 1, 0, 2, 3],
+	    [0, 1, 3, 0, 3, 0, 2, 0],
+	    [0, 0, 1, 0, 1, 1, 0, 1],
+	    [0, 1, 0, 0, 4, 0, 2, 0],
+	    [2, 0, 1, 2, 0, 1, 0, 3],
+	    [0, 1, 1, 1, 0, 1, 2, 0],
+	    [0, 4, 4, 0, 4, 1, 4, 0],
+	    [1, 1, 0, 2, 0, 1, 2, 3]
 	  ]);
 
-	  mazes.push([
-	    [1, 0, 1, 1],
-	    [2, 2, 2, 1],
-	    [0, 4, 2, 2],
-	    [3, 4, 4, 3]
+	  hardMazes.push([
+	    [1, 2, 1, 0, 1, 2, 1, 0],
+	    [0, 0, 0, 0, 2, 2, 0, 0],
+	    [0, 2, 2, 0, 3, 0, 1, 1],
+	    [3, 2, 0, 1, 1, 2, 0, 0],
+	    [3, 0, 4, 0, 1, 0, 1, 1],
+	    [0, 1, 0, 1, 1, 2, 1, 3],
+	    [4, 3, 4, 0, 1, 0, 1, 3],
+	    [4, 1, 0, 1, 0, 1, 0, 1]
 	  ]);
 
-	  return mazes[Math.floor(Math.random() * (mazes.length))];
+	  let player1 = [];
+	  let player2 = [];
+
+	  player1.push(easiestMaze);
+	  player2.push(easiestMaze);
+	  easyMazes = easyMazes.slice(0,4);
+	  hardMazes = shuffle(hardMazes);
+
+	  player1 = player1.concat(shuffle(easyMazes));
+	  player2 = player2.concat(shuffle(easyMazes));
+
+	  player1.push(hardMazes[0]);
+	  player2.push(hardMazes[0]);
+
+
+	  return [player1, player2];
+
 
 	}
-
 
 
 
@@ -467,6 +619,24 @@
 
 /***/ },
 /* 7 */
+/***/ function(module, exports) {
+
+	function shuffle(array){
+	  let randIndex = (arrLength) => Math.floor(Math.random() * arrLength);
+	  let returnArr = [];
+	  while (array.length > 0) {
+	    let index = randIndex(array.length);
+	    returnArr.push(array[index]);
+	    array.splice(index, 1);
+	  }
+
+	  return returnArr;
+	}
+	module.exports = shuffle;
+
+
+/***/ },
+/* 8 */
 /***/ function(module, exports) {
 
 	function playerIcon(player, player2) {
@@ -494,7 +664,7 @@
 
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports) {
 
 	module.exports = function (player) {
@@ -568,7 +738,7 @@
 
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports) {
 
 	module.exports = function (player) {
@@ -610,14 +780,14 @@
 	  //     player.animate('x', 100, 150, true);}
 	  // });
 
-	  if (key.isPressed('k') && key.isPressed(18)) {
+	  if (key.isPressed('k') && key.isPressed(32)) {
 	    if (player.canJumpDown) { player.animate('y', 100, player.speed, true); }
 	  }
 
 	  if (key.isPressed('k')) {
 	    if (player.canMoveDown) {player.animate('y', 50, player.speed); }
 	  }
-	  if (key.isPressed('i') && key.isPressed(18)) {
+	  if (key.isPressed('i') && key.isPressed(32)) {
 	    if (player.canJumpUp) { player.animate('y', -100, player.speed, true); }
 	  }
 
@@ -625,14 +795,14 @@
 	    if (player.canMoveUp) {player.animate('y', -50, player.speed);}
 	  }
 
-	  if (key.isPressed("j") && key.isPressed(18)) {
+	  if (key.isPressed("j") && key.isPressed(32)) {
 	    if (player.canJumpLeft) { player.animate('x', -100, player.speed, true); }
 	  }
 
 	  if (key.isPressed('j')) {
 	    if (player.canMoveLeft) { player.animate('x', -50, player.speed); }
 	  }
-	  if (key.isPressed('l') && key.isPressed(18)) {
+	  if (key.isPressed('l') && key.isPressed(32)) {
 	    if (player.canJumpRight) { player.animate('x', 100, player.speed, true); }
 	  }
 
@@ -647,7 +817,7 @@
 
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports) {
 
 	module.exports = function (player) {
@@ -710,7 +880,7 @@
 
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports) {
 
 	module.exports = function (player) {
@@ -753,7 +923,7 @@
 	  // });
 
 
-	  if (key.isPressed('i') && key.isPressed(18)) {
+	  if (key.isPressed('i') && key.isPressed(32)) {
 	    if (player.canJumpDown) { player.animate('y', 100, player.speed, true); }
 	  }
 
@@ -761,7 +931,7 @@
 	    if (player.canMoveDown) {player.animate('y', 50, player.speed); }
 	  }
 
-	  if (key.isPressed('k') && key.isPressed(18)) {
+	  if (key.isPressed('k') && key.isPressed(32)) {
 	    if (player.canJumpUp) { player.animate('y', -100, player.speed, true); }
 	  }
 
@@ -769,14 +939,14 @@
 	    if (player.canMoveUp) {player.animate('y', -50, player.speed);}
 	  }
 
-	  if (key.isPressed("l") && key.isPressed(18)) {
+	  if (key.isPressed("l") && key.isPressed(32)) {
 	    if (player.canJumpLeft) { player.animate('x', -100, player.speed, true); }
 	  }
 
 	  if (key.isPressed('l')) {
 	    if (player.canMoveLeft) { player.animate('x', -50, player.speed); }
 	  }
-	  if (key.isPressed('j') && key.isPressed(18)) {
+	  if (key.isPressed('j') && key.isPressed(32)) {
 	    if (player.canJumpRight) { player.animate('x', 100, player.speed, true); }
 	  }
 
@@ -788,18 +958,18 @@
 
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-	const gameBoard = __webpack_require__(13);
-	const drawSquare = __webpack_require__(14);
-	const shuffle = __webpack_require__(15);
+	const gameBoard = __webpack_require__(14);
+	const drawSquare = __webpack_require__(15);
+	const shuffle = __webpack_require__(7);
 
-	const Board = function (squareSize, grid, player2 = false) {
+	const Board = function (squareSize, grid, isPlayer2 = false) {
 	  this.grid = grid;
 	  this.squareSize = squareSize;
 	  this.colors = shuffle(["red", "green", "blue", "yellow", "orange"]);
-	  this.player2 = player2;
+	  this.player2 = isPlayer2;
 	};
 
 	Board.prototype.drawGrid = function (grid) {
@@ -816,10 +986,15 @@
 
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports) {
 
 	function gameBoard(player, drawSquare) {
+	  let boardId = (!player.player2) ? "board" : "board2";
+	  let canvas = document.getElementById(boardId);
+	  let ctx = canvas.getContext("2d");
+
+	  ctx.clearRect(0, 0, 600, 600);
 
 	  for (var row = 0; row < player.grid.length; row++) {
 	    for (var col = 0; col < player.grid[row].length; col++) {
@@ -840,14 +1015,14 @@
 
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports) {
 
 	function drawSquare(options) {
 	  let boardId = (!options.player2) ? "board" : "board2";
 	  let canvas = document.getElementById(boardId);
 	  let ctx = canvas.getContext("2d");
-	  ctx.clearRect(0, 0, ctx.width, ctx.height);
+	  // ctx.clearRect(0, 0, 600, 600);
 	  ctx.beginPath();
 	  ctx.fillStyle = options.color;
 	  ctx.strokeStyle = "black";
@@ -872,39 +1047,22 @@
 
 
 /***/ },
-/* 15 */
-/***/ function(module, exports) {
-
-	function shuffle(array){
-	  let randIndex = (arrLength) => Math.floor(Math.random() * arrLength);
-	  let returnArr = [];
-	  while (array.length > 0) {
-	    let index = randIndex(array.length);
-	    returnArr.push(array[index]);
-	    array.splice(index, 1);
-	  }
-
-	  return returnArr;
-	}
-	module.exports = shuffle;
-
-
-/***/ },
 /* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
-	const shuffle = __webpack_require__(15);
+	const shuffle = __webpack_require__(7);
 
 	const PowerUp = function (player, board) {
-	  let powerUps = ["vanish"];
-	  // ["freeze", "rotate", "blind", "reverse", "vanish", "slow", "fast"];
+	  let powerUps = ["flip"];
+	  // ["freeze", "rotate", "reverse", "vanish", "slow"];
 	  this.type = shuffle(powerUps)[0];
 	  this.forPlayer = player;
 	  this.board = board;
+	  this.grid = board.grid;
 	  this.xPos = board.randPos();
 	  this.yPos = board.randPos();
-	  this.xCanvas = 50 * this.yPos + 25;
-	  this.yCanvas = 50 * this.xPos + 75;
+	  this.xCanvas = () => { return 50 * this.yPos + 25; };
+	  this.yCanvas = () => { return 50 * this.xPos + 75; };
 	  this.Id = player.player2 ? "power-up2" : "power-up1";
 
 
@@ -924,22 +1082,30 @@
 	  let ctx = canvas.getContext("2d");
 	  ctx.beginPath();
 
-	  ctx.arc(this.xCanvas, this.yCanvas, 15, 0, 2 * Math.PI, false);
+	  ctx.arc(this.xCanvas(), this.yCanvas(), 15, 0, 2 * Math.PI, false);
 	  ctx.fillStyle = "gold";
 	  ctx.fill();
 	  ctx.lineWidth = 3;
 	  ctx.strokeStyle = '#003300';
 	  ctx.stroke();
 	  ctx.font = "5px Arial";
-	  ctx.fillText("P", this.xCanvas, this.yCanvas);
+	  ctx.fillText("P", this.xCanvas(), this.yCanvas());
 	  ctx.closePath();
 
 	};
 
 	PowerUp.prototype.checkForPowerUp = function (player) {
 	  if (!player.powerUp) {
+
+	    // listener when board changes update new location for the power up
+	    if (this.grid !== this.board.grid) {
+	      this.grid = this.board.grid;
+	      this.xPos = this.board.randPos();
+	      this.yPos = this.board.randPos();
+	    }
+
 	    let playerPos = [player.x, player.y];
-	    let powerUpPos = [this.xCanvas, this.yCanvas];
+	    let powerUpPos = [this.xCanvas(), this.yCanvas()];
 
 	    if (playerPos.toString() === powerUpPos.toString()) {
 	      player.powerUp = this.type;
@@ -953,6 +1119,8 @@
 
 	PowerUp.prototype.freeze = function () {
 	  // Freeze opponent for 5 seconds
+	  this.displayPowerUp();
+
 	  let trueMoves = [];
 	  this.forPlayer.opponent.movesArray.forEach((move)=> {
 	    if (this.forPlayer.opponent[move]) {
@@ -966,15 +1134,20 @@
 	    trueMoves.forEach((move) => {
 	      this.forPlayer.opponent[move] = true;
 	    });
+
 	  }, 5000);
+	  this.clearPowerUp();
 	};
 
 	PowerUp.prototype.reverse = function() {
 	  // reverse the opponents directions
+	  this.displayPowerUp();
+
 	  this.forPlayer.opponent.reverseDirections = true;
 	  setTimeout(() => {
 	    this.forPlayer.opponent.reverseDirections = false;
 	  }, 5000);
+	  this.clearPowerUp();
 
 	};
 
@@ -982,26 +1155,69 @@
 	  // Opponents icon disappears
 
 	  this.forPlayer.opponent.vanish = true;
+	  this.displayPowerUp();
 
 	  setTimeout(() => {
 	    this.forPlayer.opponent.vanish = false;
 	  }, 5000);
+	  this.clearPowerUp();
 
 	};
 
 	PowerUp.prototype.slow = function () {
 	  this.forPlayer.opponent.speed = 800;
+
+	  this.displayPowerUp();
+
 	  setTimeout(() => {
 	    this.forPlayer.opponent.speed = 150;
 	  }, 5000);
+	  this.clearPowerUp();
 	};
 
 	PowerUp.prototype.rotate = function() {
 	  // Keeps rotating the board 360 degrees
+	  this.displayPowerUp();
+
+	  let isPlayer2 = this.forPlayer.opponent.player2;
+	  let id = isPlayer2 ? "game2" : "game1";
+	  let element = document.getElementById(id);
+
+	  element.classList.add("spin");
+	  setTimeout(() => {
+	    element.classList.remove("spin");
+	  }, 5000);
+	  this.clearPowerUp();
 	};
 
-	PowerUp.prototype.blind = function() {
-	  // rolls down window blinds on the opponents board
+	PowerUp.prototype.flip = function () {
+	  this.displayPowerUp();
+
+	  let isPlayer2 = this.forPlayer.opponent.player2;
+	  let id = isPlayer2 ? "game2" : "game1";
+	  let element = document.getElementById(id);
+
+	  element.classList.add("spin2");
+	  setTimeout(() => {
+	    element.classList.remove("spin2");
+	  }, 5000);
+	  this.clearPowerUp();
+	};
+
+
+	PowerUp.prototype.clearPowerUp = function () {
+	  document.getElementById(this.Id).innerHTML = "";
+	};
+
+	PowerUp.prototype.displayPowerUp = function () {
+	  let powerUp = this.forPlayer.powerUp;
+	  let id = this.forPlayer.opponent.player2 ? powerUp + 2 : powerUp + 1;
+	  let el = document.getElementById(id);
+
+	  el.style.visibility = "visible";
+	  setTimeout(() => {
+	    el.style.visibility = "hidden";
+	  }, 2000);
 	};
 
 
